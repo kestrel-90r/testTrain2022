@@ -1,24 +1,8 @@
-﻿//-----------------------------------------------
-//
-//	This file is part of the Siv3D Engine.
-//
-//	Copyright (c) 2008-2021 Ryo Suzuki
-//	Copyright (c) 2016-2021 OpenSiv3D Project
-//
-//	Licensed under the MIT License.
-//
-//-----------------------------------------------
-
-# pragma once
-
-namespace s3d
+﻿namespace s3d
 {
-	class alignas(16) PixieCamera //:public BasicCamera3D
+	class alignas(16) PixieCamera  
 	{
-		//	using BasicCamera3D::BasicCamera3D;
-
 	public:
-		// from BasicCamera3D
 		static constexpr double DefaultVerticalFOV = 30_deg;
 		static constexpr double DefaultNearClip = 0.2;
 
@@ -225,7 +209,6 @@ namespace s3d
 			return *this;
 		}
 
-		//カメラは列車座標系で変換されて最終ワールド座標へ
 		PixieCamera& updateViewWorld(const Float3& orgpos, const Quaternion& orgrotq) noexcept
 		{
 			m_upDir = Float3{ 0,1,0 } * m_eyeRollQ;
@@ -280,10 +263,10 @@ namespace s3d
 		double m_nearClip = DefaultNearClip;
 
 		Float3 m_orgLocal = Float3{ 0, 0, 0 };
-		Quaternion m_orgRotQ = Quaternion::Identity();	//orgRotQ x eyePos→ローカル座標
+		Quaternion m_orgRotQ = Quaternion::Identity();	  
 
-		Float3 m_eyeLocal = Float3{ 0, 4, -4 };			//従来のワールド座標系、視点/注視点
-		Float3 m_focusLocal = Float3{ 0, 0, 0 };			//キャラ向き
+		Float3 m_eyeLocal = Float3{ 0, 4, -4 };			
+		Float3 m_focusLocal = Float3{ 0, 0, 0 };			
 
 		SIMD_Float4 m_eyeWorld;
 		SIMD_Float4 m_focusWorld;
@@ -292,10 +275,6 @@ namespace s3d
 		Float3 m_eyePosDelta = Float3{ 0, 0, 0 };
 		Float3 m_focusPosDelta = Float3{ 0, 0, 0 };
 
-		//列車位置+キャラ位置
-		//列車向き+キャラ向き
-
-		// itakawa added camerawork features
 		PixieCamera& setOrgPos(const Float3& orgpos) noexcept
 		{
 			m_orgLocal = orgpos;
@@ -367,7 +346,6 @@ namespace s3d
 			return distance.length() / identity.length();
 		}
 
-		//dst/srcの指定で任意座標系を使用
 		bool dolly(float forwardback, bool movefocus, bool mask_y = false)
 		{
 			return dolly(forwardback, movefocus, m_focusLocal, m_eyeLocal, mask_y);
@@ -380,12 +358,6 @@ namespace s3d
 			dolly(forwardback, dst, src, mask_y);
 			if (movefocus) m_focusLocal += m_focusPosDelta;
 
-			//目標点に達した
-//			Float3 dirA = (m_focusLocal - m_eyeLocal);
-//			Float3 dirB = (dst - src);
-//			return (Math::Sign(dirA.x) != Math::Sign(dirB.x) &&
-//					Math::Sign(dirA.y) != Math::Sign(dirB.y) &&
-//					Math::Sign(dirA.z) != Math::Sign(dirB.z));
 			return false;
 		}
 
@@ -394,7 +366,6 @@ namespace s3d
 			dolly(forwardback, m_focusLocal, m_eyeLocal);
 		}
 
-		//dst/srcの指定で任意座標系を使用
 		void dolly(float forwardback, const Float3 &dst, const Float3 &src, bool mask_y = false)
 		{
 			if (forwardback == 0) return ;
@@ -463,7 +434,6 @@ namespace s3d
 			return *this;
 		}
 
-		//dst/srcの指定で任意座標系を使用
 		PixieCamera& trackX(float leftright, bool mask_y = false )
 		{ return trackX(leftright, m_focusLocal, m_eyeLocal, mask_y); }
 
@@ -483,7 +453,6 @@ namespace s3d
 			return *this;
 		}
 
-		//dst/srcの指定で任意座標系を使用
 		PixieCamera& craneY(float updown)
 		{ return craneY( updown, m_focusLocal, m_eyeLocal); }
 
@@ -538,12 +507,6 @@ namespace s3d
 			return *this;
 		}
 
-		//カメラ行動制限範囲
-//		Box boxCollider = {};
-//		PixieCamera& setBoxCollider( Box box ) { boxCollider = box; }
-//		Box getBoxCollider( Box box) { return boxCollider; }
-
-		//移動座標系
 		Float3 moveForward = {0,0,1};
 		Float3 moveUp = { 0,1,0 };
 		Float3 moveRight = { 1,0,0 };
@@ -574,7 +537,7 @@ namespace s3d
 
 			Float3 _forward = dst - src;
 			Float3 _dir = _forward.normalized();
-			if (_dir == _up) _dir += Float3{ 0.000001,0,0 };	//上と方向が同じ
+			if (_dir == _up) _dir += Float3{ 0.000001,0,0 };	
 			Float3 _right = _dir.cross(_up).normalized();
 			_up = _dir.cross(_right).normalized();
 
@@ -593,7 +556,7 @@ namespace s3d
 			Float3 _up = Float3{ 0,1,0 };
 
 			Float3 _front = (dst - src).normalized();
-			if (_front == _up) _front += Float3{ 0.000001,0,0 };	//上と方向が同じ
+			if (_front == _up) _front += Float3{ 0.000001,0,0 };	
 
 			Float3 _right = _front.cross(_up).normalized();
 			_up = _front.cross(_right).normalized();
@@ -611,7 +574,6 @@ namespace s3d
 
 		static Quaternion getQLookAt(const Float3& dst, const Float3& src,
 							   Float3* up = nullptr, Float3* right = nullptr, Float3* foward = nullptr)
-		//ポインタを指定する場合は結果を引数で取得
 		{
 			if (dst == src) return Quaternion::Identity();
 			Float3 _up = Float3{ 0,1,0 };
@@ -619,7 +581,7 @@ namespace s3d
 
 			Float3 _forward = dst - src;
 			Float3 _dir = _forward.normalized();
-			if (_dir == _up) _dir += Float3{ 0.000001,0,0 };	//上と方向が同じ
+			if (_dir == _up) _dir += Float3{ 0.000001,0,0 };	
 
 			Float3 _right = _dir.cross(_up).normalized();
 			_up = _dir.cross(_right).normalized();
@@ -633,14 +595,13 @@ namespace s3d
 		}
 
 		Quaternion &setQLookAtOrg(const Float3& dst, const Float3& src)
-			//ポインタを指定する場合は結果を引数で取得
 		{
 			if (dst == src) return m_orgRotQ = Quaternion::Identity();
 			Float3 _up = Float3{ 0,1,0 };
 
 			Float3 _forward = dst - src;
 			Float3 _dir = _forward.normalized();
-			if (_dir == _up) _dir += Float3{ 0.000001,0,0 };	//上と方向が同じ
+			if (_dir == _up) _dir += Float3{ 0.000001,0,0 };	
 
 			Float3 _right = _dir.cross(_up).normalized();
 			_up = _dir.cross(_right).normalized();
@@ -648,47 +609,6 @@ namespace s3d
 			return m_orgRotQ = Quaternion::FromUnitVectorPairs(
 				{ Float3{0,0,1}, Float3{0,1,0} },{ -_dir, -_up });
 		}
-
-/*
-		// dstはワールド座標指定
-		Quaternion getQLookAtWorld(const Float3& dst,
-							  Float3* up = nullptr, Float3* right = nullptr) const
-		{
-			if (dst == (m_eyePos + m_orgPos)) return Quaternion::Identity();
-			Float3 _up = Float3{ 0,1,0 };
-			if (up != nullptr) _up = *up;
-
-			Float3 _forward = dst - (m_eyePos + m_orgPos);
-			Float3 _dir = _forward.normalized();
-			if (_dir == _up) _dir += Float3{ 0.000001,0,0 };	//上と方向が同じ
-			Float3 _right = _dir.cross(_up).normalized();
-			_up = _dir.cross(_right).normalized();
-			if (up != nullptr)    *up = _up;
-			if (right != nullptr) *right = _right;
-
-			return Quaternion::FromUnitVectorPairs({ Float3{0,0,1}, Float3{0,1,0} },
-													{ -_dir, -_up });
-		}
-		// dstはローカル座標指定m_orgPos原点
-		Quaternion getQLookAtLocal(const Float3& dst,
-							  Float3* up = nullptr, Float3* right = nullptr) const
-		{
-			if (dst == m_eyePos) return Quaternion::Identity();
-			Float3 _up = Float3{ 0,1,0 };
-			if (up != nullptr) _up = *up;
-
-			Float3 _forward = dst - m_eyePos;
-			Float3 _dir = _forward.normalized();
-			if (_dir == _up) _dir += Float3{ 0.000001,0,0 };	//上と方向が同じ
-			Float3 _right = _dir.cross(_up).normalized();
-			_up = _dir.cross(_right).normalized();
-			if (up != nullptr)    *up = _up;
-			if (right != nullptr) *right = _right;
-
-			return Quaternion::FromUnitVectorPairs({ Float3{0,0,1}, Float3{0,1,0} },
-													{ -_dir, -_up });
-		}
-*/
 
 		Mat4x4 getRotMat() const
 		{
@@ -712,7 +632,6 @@ namespace s3d
 			return getQLookAt(right, m_eyeLocal);
 		}
 
-		// posはワールド座標指定
 		Mat4x4 getMatInfront(Float3 pos, Float2 scale = Float2{ 1,1 }, float distance = 5.0f) const
 		{
 			Float3 infront = (m_eyeLocal + m_orgLocal - pos).normalized();
