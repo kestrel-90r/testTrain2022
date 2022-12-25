@@ -1,20 +1,7 @@
-﻿//-----------------------------------------------
-//
-//	This file is part of the Siv3D Engine.
-//
-//	Copyright (c) 2008-2019 Ryo Suzuki
-//	Copyright (c) 2016-2019 OpenSiv3D Project
-//
-//	Licensed under the MIT License.
-//
-//-----------------------------------------------
-
-# include "LineString3D.hpp"
+﻿# include "LineString3D.hpp"
 # include <Siv3D/Optional.hpp>
-//# include <Siv3D/Rectangle.hpp>
 # include <Siv3D/Spline.hpp>
 # include <Siv3D/Polygon.hpp>
-//# include <../Siv3D/src/Siv3D/Common/Siv3DEngine.hpp>
 # include <Siv3D/Mat4x4.hpp>
 # include <Siv3D/Graphics2D.hpp>
 #include <Siv3D/EngineLog.hpp>
@@ -269,7 +256,7 @@ namespace s3d
 							const float &dt0, const float &dt1,const float &dt2,const float &t)
 	{
 		static float c0[3] = {0,0,0}, c1[3] = { 0,0,0 }, c2[3] = { 0,0,0 }, c3[3] = { 0,0,0 };
-		if (!use_cache)//前回キャッシュと同じ場合は計算をキャンセル
+		if (!use_cache)
 		{
 			float t0 = ((x1 - x0) / dt0 - (x2 - x0) / (dt0 + dt1) + (x2 - x1) / dt1) * dt1;
 			float t1 = ((x2 - x1) / dt1 - (x3 - x1) / (dt1 + dt2) + (x3 - x2) / dt2) * dt1;
@@ -291,7 +278,7 @@ namespace s3d
 		static float dt0, dt1, dt2;
 
 		bool use_cache = (cache[0] == p0 && cache[1] == p1 && cache[2] == p2 && cache[3] == p3);
-		if (!use_cache)//前回キャッシュと同じ場合は計算をキャンセル
+		if (!use_cache)
 		{
 			dt0 = powf( p0.distanceFromSq( p1 ), 0.25f);
 			dt1 = powf( p1.distanceFromSq( p2 ), 0.25f);
@@ -302,7 +289,7 @@ namespace s3d
 			cache[3] = p3;
 		}
 
-		if ( dt0==0 || dt1==0 || dt2==0 )return Float3{ 0,0,0 };	//ゼロ割
+		if ( dt0==0 || dt1==0 || dt2==0 )return Float3{ 0,0,0 };	
 
 		float x = CubicPolynomial(use_cache, MODEAXIS::X, p0.x, p1.x, p2.x, p3.x, dt0, dt1, dt2, weight);
 		float y = CubicPolynomial(use_cache, MODEAXIS::Y, p0.y, p1.y, p2.y, p3.y, dt0, dt1, dt2, weight);
@@ -336,7 +323,6 @@ namespace s3d
 			return *this;
 		}
 
-		// [Siv3D ToDo] 最適化
 		Array<Vec3> ps;
 		{
 			ps.reserve(size() + 2 + isClosed);
@@ -397,7 +383,6 @@ namespace s3d
 			return *this;
 		}
 
-		// [Siv3D ToDo] 最適化
 		Array<Vec3> ps;
 		{
 			ps.reserve(size() + 2 + isClosed);
@@ -481,19 +466,14 @@ namespace s3d
 
 		for (uint32 step=1; step<(numlines); step++ )
 		{
-			//距離＝全長ｘライン長/ライン数
 			const double distance = (LEN * (double)step) / numlines;
 
-			//距離に近似する制御点をさがす
 			for (uint32 i = prev_i; i<lengthList.size(); i++)
 			{
-				//制御点アリ→i
 				if (distance < lengthList[i])
 				{
-					//制御点からの距離→T
 					const double T = distance - lengthList[ i-1 ];
 
-					//区間距離
 					double len = at(i).distanceFrom(at( i-1 ));
 					Vec3 vec = at( i-1 ).lerp(at(i), T / len);
 
@@ -514,7 +494,7 @@ namespace s3d
 
 	Vec3 LineString3D::getCurvedPoint( double progress, size_t start=0, size_t end = SIZE_MAX) 
 	{
-		if ( start > end || (end - start) < 1 || progress > 1.0) assert(1);
+		if ( start > end || (end - start) < 1 || progress > 1.0 || progress < 0.0) assert(1);
 		if ( end == SIZE_MAX) end = this->num_lines()-2;
 
 		if ( fullLength == 0 )
@@ -531,8 +511,6 @@ namespace s3d
 		const Vec3& p2 = this->at(ti + 1);
 	             	p3 = this->at(ti + 2);
 		Vec3 p = CatmullRom3D(p0, p1, p2, p3, tw);
-//		Vec3 p = Spline3D(p0, p1, p2, p3, tw);
-
 		return p;
 	}
 

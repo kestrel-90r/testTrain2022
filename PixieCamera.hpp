@@ -1,4 +1,6 @@
-﻿namespace s3d
+﻿# pragma once
+
+namespace s3d
 {
 	class alignas(16) PixieCamera  
 	{

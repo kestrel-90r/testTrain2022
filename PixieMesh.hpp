@@ -23,6 +23,23 @@ using Word4 = Vector4D<uint16>;
 constexpr float USE_USERCOLOR = 0;	
 constexpr float USE_OFFSET_METARIAL = -1;
 constexpr float USE_TEXTURE = -2 ;
+constexpr uint8 CODEMAP[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13, 0, 0, 
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+							 0,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,   
+							29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,  
+							45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,  
+							61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,  
+							77,107,78,79,80,81,82,83,84,85,86,87,88,89,90, 
+							91,92,93,94,95,96,97,98,108,99,100,101,102,103,104,  
+							105,106,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 
 enum MODELTYPE { MODELNOA, MODELANI, MODELVRM };
 
@@ -172,8 +189,6 @@ public:
 
 	Float3		eRot{0,0,0};					
 	Quaternion	qRot{ Quaternion::Identity() };	  
-	Quaternion	qSpin{ Quaternion::Identity() };
-
     Float3		rPos{0,0,0};					
 
     int32		currentFrame=0;
@@ -194,7 +209,6 @@ public:
                Float3 erot = Float3{0,0,0},    
 			   Float3 rotate = Float3{ 0,0,0 },
 			   Float3 relpos = Float3{0,0,0},  
-			   Float3 qspin = Float3{ 0,0,0 }, 
 			   int32 frame=0,                  
                int32 anime=0,                  
                int32 morph=0)                  
@@ -205,9 +219,6 @@ public:
         Sca = scale;
         eRot = erot;
 		qRot = Quaternion::RollPitchYaw(ToRadians(rotate.x), ToRadians(rotate.y), ToRadians(rotate.z));
-
-		if (qspin != Float3{ 0,0,0 })
-			qSpin = Quaternion::RollPitchYaw(ToRadians(qspin.x), ToRadians(qspin.y), ToRadians(qspin.z));
 
 		currentFrame = frame;
         animeID = anime;
@@ -276,11 +287,6 @@ public:
 	PixieMesh& setRotateQ(Quaternion amount)
 	{
 		qRot = amount;
-		return *this;
-	}
-	PixieMesh& setSpinQ(Quaternion amount)
-	{
-		qSpin = amount;
 		return *this;
 	}
 	PixieMesh& setShowCollider(Use use)
@@ -503,7 +509,6 @@ public:
 			}
 		}
 
-
 		for (uint32 nn = 0; nn < gltfModel.nodes.size(); nn++)
 			gltfSetupMorph(gltfModel.nodes[nn], noaModel.morphMesh);
 
@@ -553,7 +558,6 @@ public:
     void gltfSetupNOA( tinygltf::Node& node, uint32 nodeidx, Array<Array<Mat4x4>> &Joints )
     {
 		static uint32 morphidx = 0;         
-
 		if (node.mesh < 0) return;			
 		else if (node.mesh == 0)
 		{
@@ -1082,8 +1086,7 @@ public:
         __m128 rot = XMQuaternionRotationRollPitchYaw(ToRadians(eRot.x), ToRadians(eRot.y), ToRadians(eRot.z));
 
 		Mat4x4 mrot;
-		if (!qSpin.isIdentity()) mrot = Mat4x4(Quaternion(rot) * qRot * qSpin);
-		else mrot = Mat4x4(Quaternion(rot) * qRot);
+			mrot = Mat4x4(Quaternion(rot) * qRot);
 
 		Float3 tra = Pos + rPos;
 
@@ -1132,6 +1135,16 @@ public:
 			Line3D(zx[0], zx[1]).draw(ColorF{ 0.2,0.2,0.8 });
 			Line3D(zy[0], zy[1]).draw(ColorF{ 0.2,0.2,0.8 });
 		}
+#if 0
+		Float3 pos,sca;
+		Quaternion qrot;
+		mat.decompose(sca,qrot,pos);
+		setMove(pos).setScale({ 0.1,0.1,0.1 });
+
+		const Quaternion Z90 = Quaternion::RotateX(ToRadians(90));
+		setRotateQ(Z90).drawString(camera.getMatInfront(pos),
+			U"\n X:{:.2f}\n Y:{:.2f}\n Z:{:.2f}\n{}"_fmt(pos.x, pos.y, pos.z, text), -0.2, color);
+#endif
 	}
 
 	PixieMesh& setMat(Mat4x4 &mat)
@@ -1343,7 +1356,6 @@ public:
 		uint32 primitiveidx = 0;
 		uint32 tid = 0;
 
-		if (!qSpin.isIdentity()) qRot *= qSpin;
 		Quaternion rot = qRot ;
 		if (eRot != Float3{0,0,0}) rot *= QPYR(eRot) ;
 
@@ -1895,7 +1907,6 @@ public:
 
 								if (node.skin >= 0)
 								{
-
 									uint8* jb = (uint8*)&bjoint.data.at(vv * stride_j + ojoints); 
 									uint16* jw = (uint16*)&bjoint.data.at(vv * stride_j + ojoints);
 									Word4 j4 = (type_j == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) ?
@@ -1999,6 +2010,7 @@ public:
 											auto& mii = gm.images[idx].image;
 											tex = Texture(MemoryReader{ (void*)&mii,mii.size() }, TextureDesc::MippedSRGB);
 										}
+
 									}
 									usetex = 1;
 								}
@@ -2183,8 +2195,6 @@ public:
 		Rect rectdraw = Rect{ 0,0,camera.getSceneSize() };
         matVP = camera.getViewProj();
 
-		if (!qSpin.isIdentity()) qRot *= qSpin;
-
         AnimeModel& ani = aniModel;
         __m128 rotate = XMQuaternionRotationRollPitchYaw(ToRadians(eRot.x), ToRadians(eRot.y), ToRadians(eRot.z));
 		rotate = qRot * Quaternion(rotate);
@@ -2284,23 +2294,6 @@ public:
 		if (0 == noaModel.Meshes.size()) return *this;
 		if (mat.value.r->m128_f32[0]==-Math::NaN || Pos.hasNaN() || qRot.hasNaN() || qRot.hasInf()) assert(1);
 
-		const uint8 CODEMAP[256] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,   
-									29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,  
-									45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,  
-									61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,  
-									77,78,79,80,81,82,83,84,85,86,87,88,89,90,91, 
-									92,93,94,95,96,97,98,99,100,101,102,103,104,105,  
-									106,107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
 		text += U" ";   
 		int32 maxcount = text.size();
 		bool isall = false;
@@ -2324,8 +2317,7 @@ public:
 		__m128 rot = XMQuaternionRotationRollPitchYaw(ToRadians(eRot.x), ToRadians(eRot.y), ToRadians(eRot.z));
 
 		Mat4x4 mrot;
-		if (!qSpin.isIdentity()) mrot = Mat4x4(Quaternion(rot) * qRot * qSpin);
-		else mrot = Mat4x4(Quaternion(rot) * qRot);
+			mrot = Mat4x4(Quaternion(rot) * qRot);
 
 		mat = mat * Mat4x4::Identity().Scale(Float3{ -Sca.x,Sca.y,Sca.z }) * mrot;
 
@@ -2385,27 +2377,11 @@ public:
 
 
 	PixieMesh& drawString(String text, float kerning = 10, float radius = 0, ColorF color = Palette::White,
-		int32 istart = 0, float icount = 0 )	
+		int32 istart = 0, float icount = 0.0 )	
 	{
 		if (Pos.hasNaN() || qRot.hasNaN() || qRot.hasInf()) return *this;
 
 		if ( 0 == noaModel.Meshes.size()) return *this;
-		const uint8 CODEMAP[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,   
-									29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,  
-									45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,  
-									61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,  
-									77,108,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,  
-									93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,  
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 		text += U" ";   
 		int32 maxcount = text.size();
@@ -2435,22 +2411,21 @@ public:
 			__m128 rot = XMQuaternionRotationRollPitchYaw(ToRadians(eRot.x), ToRadians(eRot.y), ToRadians(eRot.z));
 
 			Mat4x4 mrot;
-			if (!qSpin.isIdentity()) mrot = Mat4x4(Quaternion(rot) * qRot * qSpin);
-			else mrot = Mat4x4(Quaternion(rot) * qRot);
+				mrot = Mat4x4(Quaternion(rot) * qRot);
 
-			mat = Mat4x4::Identity().Scale(Float3{ -Sca.x,Sca.y,Sca.z }) * mrot;
+			mat = Mat4x4::Identity().Scale(Float3{ Sca.x,Sca.y,Sca.z }) * mrot;
 
 			Float3 f3 = Mat4x4(qRot).transformPoint(Float3(kerning, 0, 0));
 			Float3 lf = Mat4x4(qRot).transformPoint(Float3(0, kerning, 0));
 			Float3 cr = pos;
 
-			for (int32 i = start; i <= last; i++)
+			for (int32 i = 0; i <= last; i++)
 			{
 				auto ascii = text.substr(i, 1)[0];
 				if (ascii >= sizeof(CODEMAP)) continue;
 				const uint8& code = CODEMAP[ascii];
 
-				if (ascii == ' ')
+				if (ascii == ' ' || i < start )
 				{
 					pos += f3;
 					continue;
@@ -2480,7 +2455,7 @@ public:
 				}
 				else
 				{
-					if (i < (last - 1))
+					if (i < last)
 					{
 						noaModel.Meshes[code].draw(mat.translated(pos), color);
 						pos += f3;
@@ -2492,29 +2467,40 @@ public:
 
 		else 
 		{
-			for (uint32 i = start; i <= last; i++)
+			int32 y = 0;
+			int32 x = 0;
+
+			for (uint32 i = 0; i <= last; i++)
 			{
 				auto ascii = text.substr(i, 1)[0];
 				if (ascii == ' ' || ascii >= sizeof(CODEMAP)) continue;
 				const uint8& code = CODEMAP[ascii];
 
-				Quaternion r = Quaternion::RotateY( ToRadians(-(signed)i * kerning) );							                                      	
+				if (ascii == ' ' || i < start)
+				{
+					x++;
+					continue;
+				}
+				else if (ascii == '\n')
+				{
+					x = 0;
+					y++;
+					continue;
+				}
 
-				Float3 tt;
+				Quaternion r = Quaternion::RotateY( ToRadians( -x * kerning ) );	
+				Float3 tt = Vec3(radius, 0, 0);
 
-				if (!qSpin.isIdentity()) qRot *= qSpin;
-				tt = (r * qRot) * Vec3(radius, 0, 0);      　
+				mat = Mat4x4::Identity().Rotate(r * qRot); 
+				Float3 pp = mat.transformPoint(tt);
 
-				mat = Mat4x4::Identity().rotated(r).scaled(Float3{ Sca }).translated(Pos + tt);
-
-				Float3 pp = mat.transformPoint(Pos);
-				Float3 up = Float3{0,1,0};     
+				Float3 up = Float3{ 0,1,0 };
 				Quaternion rotate = camera.getQLookAt(pp, Pos, &up);
 
-				Quaternion er = Quaternion::RollPitchYaw(ToRadians(eRot.x), ToRadians(eRot.y), ToRadians(eRot.z));	
-				Quaternion r2 = Quaternion::RollPitchYaw(ToRadians(-90), ToRadians(0), ToRadians(0));				
-				mat = mat.Rotate(r2 * rotate).translated(Pos + tt).rotated(er).scaled(Float3{ Sca.x,-Sca.y,Sca.z });	
+				Quaternion er = QPYR(eRot.x, eRot.y, eRot.z - y * kerning);	
 
+				mat = mat.Rotate(rotate).translated(tt).rotated(er).scaled(Float3{ -1,1,1 });	
+#if 0
 				if (displacementFunc != nullptr)
 				{
 					Array<Vertex3D>	vertices = noaModel.MeshDatas[code].vertices;	
@@ -2523,7 +2509,7 @@ public:
 					noaModel.Meshes[code].fill(vertices);							
 					noaModel.Meshes[code].fill(indices);
 				}
-
+#endif
 				if (isall)
 				{
 					size_t count = noaModel.Meshes[code].num_triangles();
@@ -2531,11 +2517,17 @@ public:
 				}
 				else
 				{
-					if (i < (last - 1))
+					if (i < last)
 						noaModel.Meshes[code].draw(mat.translated(pos), color);
+
 					else
-						noaModel.Meshes[code].drawSubset(0, noaModel.Meshes[code].num_triangles() * stroke, mat, color);
+					{
+						uint32 count = noaModel.Meshes[code].num_triangles();
+						noaModel.Meshes[code].drawSubset(0, count * stroke, mat.translated(pos), color);
+					}
 				}
+
+				x++;
 			}
 		}
 		return *this;

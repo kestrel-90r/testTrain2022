@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-namespace libPixie
+namespace libMaple
 {
 	using string = std::string;
 	using strings = std::vector<std::string>;
